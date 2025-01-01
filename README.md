@@ -25,6 +25,8 @@ $ ./run.sh
 
 ![boot success](./_pics/boot_20241229231006.png)
 
+可以执行 `poweroff` 命令关机，如果要直接关闭 Qemu 虚拟机，可以按下组合键`Ctrl+a`，然后按 `x` 键。
+
 Qemu 虚拟机添加了 `-monitor tcp:127.0.0.1:4444` 选项，可以用 telnet 连接虚拟机的监视器，查看虚拟机的配置和状态，例如：
 
 ![qemu monitor](./_pics/qemu-monitor_20241231200440.png)
