@@ -29,7 +29,7 @@ cd ${BUILD_DIR}/${KERNEL_SRC_VERSION}
 export ARCH=x86
 make O=./build x86_64_defconfig
 
-# 支持一个RAMDisk，大小为64MB
+# 修改配置，支持一个 RAMDisk，大小为64MB
 ./scripts/config --file ./build/.config --enable CONFIG_BLK_DEV_RAM
 ./scripts/config --file ./build/.config --set-val CONFIG_BLK_DEV_RAM_COUNT 1
 ./scripts/config --file ./build/.config --set-val CONFIG_BLK_DEV_RAM_SIZE 65536
@@ -37,8 +37,11 @@ make O=./build x86_64_defconfig
 make O=./build -j8
 cd ${TOP_DIR}
 
-# 拷贝内核镜像
-cp ${BUILD_DIR}/${KERNEL_SRC_VERSION}/build/arch/x86/boot/bzImage ${KERNEL_IMG}
+# 更新 ${INSTALL_DIR} 下的文件
+if [ -e ${INSTALL_DIR}/${KERNEL_IMG} ]; then
+    rm -rf ${INSTALL_DIR}/${KERNEL_IMG}
+fi
+cp ${BUILD_DIR}/${KERNEL_SRC_VERSION}/build/arch/x86/boot/bzImage ${INSTALL_DIR}/${KERNEL_IMG}
 echo "------"
 echo "kernel build success."
-echo "kernel image: ${KERNEL_IMG}"
+echo "kernel image: ${INSTALL_DIR}/${KERNEL_IMG}"

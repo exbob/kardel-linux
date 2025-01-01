@@ -31,8 +31,11 @@ sed -e 's/^# CONFIG_STATIC is not set/CONFIG_STATIC=y/' -i .config
 make install
 cd ${TOP_DIR}
 
-# 拷贝 Busybox 可执行文件
-cp -r ${BUILD_DIR}/${BUSYBOX_SRC_VERSION}/_install/ ${ROOTFS}
+# 更新 ${INSTALL_DIR} 下的目录
+if [ -d ${INSTALL_DIR}/${ROOTFS} ]; then
+    rm -rf ${INSTALL_DIR}/${ROOTFS}
+fi
+cp -r ${BUILD_DIR}/${BUSYBOX_SRC_VERSION}/_install/ ${INSTALL_DIR}/${ROOTFS}
 echo "------"
 echo "busybox build success."
-echo "rootfs path: ${ROOTFS}"
+echo "rootfs path: ${INSTALL_DIR}/${ROOTFS}"
