@@ -19,7 +19,8 @@ mkdir -p ${INSTALL_DIR}
 IMAGE_DIR="${BUILD_DIR}/image"
 mkdir -p ${IMAGE_DIR}
 
-# 定义内核镜像、根文件系统
+# 定义 u-boot、内核镜像、根文件系统
+UBOOT_IMG=u-boot.rom
 KERNEL_IMG=vmlinuz
 ROOTFS=rootfs
 ROOTFS_IMG=rootfs.img.gz

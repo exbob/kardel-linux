@@ -9,6 +9,13 @@ else
     mkdir -p ${IMAGE_DIR}
 fi
 
+if [ -e ${INSTALL_DIR}/${UBOOT_IMG} ]; then
+    cp -a ${INSTALL_DIR}/${UBOOT_IMG} ${IMAGE_DIR}/${UBOOT_IMG}
+else
+    echo "${INSTALL_DIR}/${UBOOT_IMG} : u-boot image not found."
+    exit 1
+fi
+
 if [ -e ${INSTALL_DIR}/${KERNEL_IMG} ]; then
     cp -a ${INSTALL_DIR}/${KERNEL_IMG} ${IMAGE_DIR}/${KERNEL_IMG}
 else
