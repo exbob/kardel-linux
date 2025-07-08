@@ -35,17 +35,21 @@ NAME="kardel"
 CPUS="2"
 MEM_SIZE="1024" # MB
 
+# 添加网络支持
+QEMU_NET="-netdev user,id=net0,hostfwd=tcp::2222-:22 -device e1000,netdev=net0"
+
 QEMU_HW_CFG="-name ${NAME} \
     -smp ${CPUS} \
     -m ${MEM_SIZE} \
     -nographic \
+    ${QEMU_NET} \
     -monitor tcp:127.0.0.1:4444,server,nowait "
 
 # 定义 QEMU 的软件参数
 QEMU_BOOTLOADER="-bios ${IMAGE_DIR}/${UBOOT_IMG}"
 QEMU_KERNEL="-kernel ${IMAGE_DIR}/${KERNEL_IMG}"
 QEMU_INITRD="-initrd ${IMAGE_DIR}/${ROOTFS_IMG}"
-QEMU_APPEND='-append "root=/dev/ram rw rootfstype=ext4 console=ttyS0 init=/sbin/init"'
+QEMU_APPEND='-append "root=/dev/ram rw rootfstype=ext4 console=ttyS0 init=/sbin/init ip=dhcp"'
 
 # 跟进启动模式设置 QEMU 的软件参数
 if [ "${BOOT_MODE}" = "-s" ]; then
@@ -54,7 +58,7 @@ if [ "${BOOT_MODE}" = "-s" ]; then
     qemu-system-x86_64 ${QEMU_HW_CFG} \
     -kernel ${IMAGE_DIR}/${KERNEL_IMG} \
     -initrd ${IMAGE_DIR}/${ROOTFS_IMG} \
-    -append "root=/dev/ram rw rootfstype=ext4 console=ttyS0 init=/sbin/init"
+    -append "root=/dev/ram rw rootfstype=ext4 console=ttyS0 init=/sbin/init ip=dhcp"
 elif [ "${BOOT_MODE}" = "-u" ]; then
     # 从 u-boot 启动
     echo "boot from u-boot..."

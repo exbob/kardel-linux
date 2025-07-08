@@ -75,3 +75,39 @@ Starting kernel ...
 注意，按下 `Ctrl+]` 组合键可以只退出监视器而不关闭虚拟机，如果执行 q 命令，会关闭虚拟机。
 
 > 更多内容参考 `docs/` 下的文档。
+
+## NFS
+
+该虚拟机使能了NFS，可以挂载共享文件夹。
+
+首先要在宿主机上设置 NFS 服务器：
+
+```
+# 安装 NFS 服务器
+~ $ sudo apt-get install nfs-kernel-server
+
+# 创建共享目录
+~ $ mkdir -p ~/workspace
+
+# 配置 NFS 导出
+~ $ echo "/home/$(whoami)$/workspace *(insecure,rw,sync,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
+
+# 重启 NFS 服务
+~ $ sudo systemctl restart nfs-kernel-server
+```
+
+然后在虚拟机的系统里挂载NFS：
+
+```
+~ # mount -t nfs -o vers=3,nolock 10.0.2.2:/home/lsc/workspace /mnt
+
+~ # df
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/root                27620      2808     22524  11% /
+devtmpfs                497372         0    497372   0% /dev
+tmpfs                   500508         0    500508   0% /tmp
+10.0.2.2:/home/lsc/workspace
+                     1055763456 165004288 837055488  16% /mnt
+```
+
+注意：在 QEMU 的用户模式网络中，10.0.2.2 是宿主机的 IP 地址。

@@ -28,6 +28,11 @@ tar -xvf ${DOWNLOAD_DIR}/${BUSYBOX_SRC_VERSION}.tar.bz2 -C ${BUILD_DIR}
 cd ${BUILD_DIR}/${BUSYBOX_SRC_VERSION}
 make defconfig
 sed -e 's/^# CONFIG_STATIC is not set/CONFIG_STATIC=y/' -i .config
+
+# 确保启用 mount 和 NFS 相关命令
+sed -e 's/^# CONFIG_FEATURE_MOUNT_NFS is not set/CONFIG_FEATURE_MOUNT_NFS=y/' -i .config
+sed -e 's/^# CONFIG_NFSMOUNT is not set/CONFIG_NFSMOUNT=y/' -i .config
+
 make install
 cd ${TOP_DIR}
 
