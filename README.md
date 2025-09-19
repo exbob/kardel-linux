@@ -11,14 +11,21 @@ Kardel Linux 是一个微型 Linux 发行版，命名来自 Dota2 游戏的矮�
 5. build-image.sh 会从 `${INSTALL_DIR}` 路径获取制作系统镜像所需的文件，复制到 `${IMAGE_DIR}` 路径下，完成制作，主要进一步制作 rootfs 。
 6. run.sh 会使用 `${IMAGE_DIR}` 下的系统镜像文件，启动一个 Qemu 虚拟机。
 
-使用前需要安装 qemu 虚拟机：
+以Ubuntu20宿主机为例，使用前需要安装 qemu 虚拟机：
 
 ```
-$ sudo apt-get install qemu qemu-system
+$ sudo apt-get install qemu-system
 $ qemu-system-x86_64 --version
 QEMU emulator version 4.2.1 (Debian 1:4.2-3ubuntu6.30)
 Copyright (c) 2003-2019 Fabrice Bellard and the QEMU Project developers
 ```
+
+安装一些必要的包：
+```
+$ sudo apt-get install git cmake build-essential bison flex swig python3-dev \
+libssl-dev libncurses-dev libelf-dev bc zstd libtirpc-dev rpcbind libnsl-dev pkgconf
+```
+
 
 然后依次执行如下脚本生成所需的组件：
 

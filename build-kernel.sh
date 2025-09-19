@@ -1,9 +1,35 @@
-#!/bin/sh
+#!/bin/bash
 . ./config.sh
 
-# 定义内核版本
-KERNEL_SRC_VERSION="linux-5.15.175"
+# 定义多个内核版本选项
+KERNEL_VERSIONS=(
+    "linux-6.6.106"
+    "linux-5.15.193"
+)
+
+# 显示可用的内核版本
+echo "Kernel version:"
+for i in "${!KERNEL_VERSIONS[@]}"; do
+    echo "$((i+1)). ${KERNEL_VERSIONS[$i]}"
+done
+
+# 让用户选择内核版本
+echo -n "Please select [1-${#KERNEL_VERSIONS[@]}]: "
+read choice
+
+# 验证用户输入
+if ! [[ "$choice" =~ ^[0-9]+$ ]] || [ "$choice" -lt 1 ] || [ "$choice" -gt ${#KERNEL_VERSIONS[@]} ]; then
+    echo "Invalid selection, use default version: ${KERNEL_VERSIONS[0]}"
+    choice=1
+fi
+
+# 设置选择的内核版本
+idx=$((choice-1))
+KERNEL_SRC_VERSION="${KERNEL_VERSIONS[$idx]}"
 KERNEL_SRC_URL="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/snapshot/${KERNEL_SRC_VERSION}.tar.gz"
+
+echo "Already selected: ${KERNEL_SRC_VERSION}"
+echo ""
 
 # 下载内核源码并解压
 if [ -e ${DOWNLOAD_DIR}/${KERNEL_SRC_VERSION}.tar.gz ]; then
