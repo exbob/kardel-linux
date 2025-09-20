@@ -30,16 +30,15 @@ make defconfig
 sed -e 's/^# CONFIG_STATIC is not set/CONFIG_STATIC=y/' -i .config
 
 # 确保启用 mount 和 NFS 相关命令
-#sed -e 's/^# CONFIG_FEATURE_MOUNT_NFS is not set/CONFIG_FEATURE_MOUNT_NFS=y/' -i .config
-#sed -e 's/^# CONFIG_NFSMOUNT is not set/CONFIG_NFSMOUNT=y/' -i .config
+sed -e 's/^# CONFIG_FEATURE_MOUNT_NFS is not set/CONFIG_FEATURE_MOUNT_NFS=y/' -i .config
+sed -e 's/^# CONFIG_NFSMOUNT is not set/CONFIG_NFSMOUNT=y/' -i .config
 
 # 禁用 TC ，否则在6.8以上内核上编译会报错，这是一个Bug
-sed -e 's/^CONFIG_TC=y/# CONFIG_TC is not set/' -i .config
-
+#sed -e 's/^CONFIG_TC=y/# CONFIG_TC is not set/' -i .config
 #sed -e 's/^CONFIG_EXTRA_LDLIBS=""/CONFIG_EXTRA_LDLIBS="pthread dl tirpc audit pam"/' -i .config
-
 # 使用 pkg-config 编译
 #make CFLAGS="$(pkg-config --cflags libtirpc)" LDFLAGS="$(pkg-config --libs libtirpc)" install
+
 make install
 cd ${TOP_DIR}
 
