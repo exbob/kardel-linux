@@ -11,7 +11,9 @@ Kardel Linux 是一个微型 Linux 发行版，命名来自 Dota2 游戏的矮�
 5. build-image.sh 会从 `${INSTALL_DIR}` 路径获取制作系统镜像所需的文件，复制到 `${IMAGE_DIR}` 路径下，完成制作，主要进一步制作 rootfs 。
 6. run.sh 会使用 `${IMAGE_DIR}` 下的系统镜像文件，启动一个 Qemu 虚拟机。
 
-以Ubuntu20宿主机为例，使用前需要安装 qemu 虚拟机：
+## 快速开始
+
+以 Ubuntu20 宿主机为例，使用前需要安装 qemu 虚拟机：
 
 ```
 $ sudo apt-get install qemu-system
@@ -25,7 +27,6 @@ Copyright (c) 2003-2019 Fabrice Bellard and the QEMU Project developers
 $ sudo apt-get install git cmake build-essential bison flex swig python3-dev \
 libssl-dev libncurses-dev libelf-dev bc zstd libtirpc-dev rpcbind libnsl-dev pkgconf
 ```
-
 
 然后依次执行如下脚本生成所需的组件：
 
@@ -83,38 +84,79 @@ Starting kernel ...
 
 > 更多内容参考 `docs/` 下的文档。
 
-## NFS
+## 使用方法
 
-该虚拟机使能了NFS，可以挂载共享文件夹。
+### 文件共享
 
-首先要在宿主机上设置 NFS 服务器：
-
-```
-# 安装 NFS 服务器
-~ $ sudo apt-get install nfs-kernel-server
-
-# 创建共享目录
-~ $ mkdir -p ~/workspace
-
-# 配置 NFS 导出
-~ $ echo "/home/$(whoami)$/workspace *(insecure,rw,sync,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
-
-# 重启 NFS 服务
-~ $ sudo systemctl restart nfs-kernel-server
-```
-
-然后在虚拟机的系统里挂载NFS：
+虚拟机使用9P文件系统，将主机的`HOST_SHARE_PATH=${BUILD_DIR}`路径挂载到了虚拟机的 `/mnt` 目录：
 
 ```
-~ # mount -t nfs -o vers=3,nolock 10.0.2.2:/home/lsc/workspace /mnt
-
 ~ # df
 Filesystem           1K-blocks      Used Available Use% Mounted on
-/dev/root                27620      2808     22524  11% /
-devtmpfs                497372         0    497372   0% /dev
-tmpfs                   500508         0    500508   0% /tmp
-10.0.2.2:/home/lsc/workspace
-                     1055763456 165004288 837055488  16% /mnt
+/dev/root                27620      2736     22596  11% /
+devtmpfs                495340         0    495340   0% /dev
+tmpfs                   498436         0    498436   0% /tmp
+hostshare            1055762784  78147900 923911352   8% /mnt
+~ # cd /mnt/
+/mnt # ls
+busybox-1.36.1   install          u-boot-v2024.04
+image            linux-5.15.193
 ```
 
-注意：在 QEMU 的用户模式网络中，10.0.2.2 是宿主机的 IP 地址。
+可以用这个路径，实现虚拟机和主机的文件共享。
+
+### 网络
+
+虚拟机使能了一个以太网卡：
+
+```
+~ # ifconfig
+eth0      Link encap:Ethernet  HWaddr 52:54:00:12:34:56
+          inet addr:10.0.2.15  Bcast:10.0.2.255  Mask:255.255.255.0
+          inet6 addr: fe80::5054:ff:fe12:3456/64 Scope:Link
+          inet6 addr: fec0::5054:ff:fe12:3456/64 Scope:Site
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:3 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:9 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:742 (742.0 B)  TX bytes:1782 (1.7 KiB)
+
+lo        Link encap:Local Loopback
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+```
+
+在 QEMU 的用户模式网络中，10.0.2.2 是宿主机的 IP 地址：
+
+```
+~ # ping 10.0.2.2 -c 4
+PING 10.0.2.2 (10.0.2.2): 56 data bytes
+64 bytes from 10.0.2.2: seq=0 ttl=255 time=10.954 ms
+64 bytes from 10.0.2.2: seq=1 ttl=255 time=1.067 ms
+64 bytes from 10.0.2.2: seq=2 ttl=255 time=1.940 ms
+64 bytes from 10.0.2.2: seq=3 ttl=255 time=1.988 ms
+
+--- 10.0.2.2 ping statistics ---
+4 packets transmitted, 4 packets received, 0% packet loss
+round-trip min/avg/max = 1.067/3.987/10.954 ms
+```
+
+也可以联通公网：
+
+```
+~ # ping 223.5.5.5 -c 4
+PING 223.5.5.5 (223.5.5.5): 56 data bytes
+64 bytes from 223.5.5.5: seq=0 ttl=255 time=25.036 ms
+64 bytes from 223.5.5.5: seq=1 ttl=255 time=15.167 ms
+64 bytes from 223.5.5.5: seq=2 ttl=255 time=15.407 ms
+64 bytes from 223.5.5.5: seq=3 ttl=255 time=15.573 ms
+
+--- 223.5.5.5 ping statistics ---
+4 packets transmitted, 4 packets received, 0% packet loss
+round-trip min/avg/max = 15.167/17.795/25.036 ms
+```

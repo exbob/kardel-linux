@@ -47,6 +47,8 @@ mkdir -p ./etc/init.d
 echo -n > ./etc/init.d/rcS
 echo '#!/bin/sh' >> ./etc/init.d/rcS
 echo '/bin/mount -a' >> ./etc/init.d/rcS
+# 使用9P文件系统，挂载主机共享目录
+echo 'mount -t 9p -o trans=virtio,version=9p2000.L hostshare /mnt' >> ./etc/init.d/rcS
 chmod 755 etc/init.d/rcS
 
 echo -n > ./etc/fstab

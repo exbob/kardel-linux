@@ -60,15 +60,21 @@ make O=./build x86_64_defconfig
 ./scripts/config --file ./build/.config --set-val CONFIG_BLK_DEV_RAM_COUNT 1
 ./scripts/config --file ./build/.config --set-val CONFIG_BLK_DEV_RAM_SIZE 65536
 
-# 添加 NFS 客户端支持
-./scripts/config --file ./build/.config --enable CONFIG_NFS_FS
-./scripts/config --file ./build/.config --enable CONFIG_NFS_V3
-./scripts/config --file ./build/.config --enable CONFIG_NFS_V4
-./scripts/config --file ./build/.config --enable CONFIG_ROOT_NFS
-./scripts/config --file ./build/.config --enable CONFIG_IP_PNP
-./scripts/config --file ./build/.config --enable CONFIG_IP_PNP_DHCP
+# 添加 9P 文件系统支持
+./scripts/config --file ./build/.config --enable CONFIG_FUSE_FS
+./scripts/config --file ./build/.config --enable CONFIG_VIRTIO_FS
+./scripts/config --file ./build/.config --enable CONFIG_VIRTIO_PCI
+./scripts/config --file ./build/.config --enable CONFIG_NET_9P
+./scripts/config --file ./build/.config --enable CONFIG_NET_9P_VIRTIO
+./scripts/config --file ./build/.config --enable CONFIG_9P_FS
+./scripts/config --file ./build/.config --enable CONFIG_9P_FS_POSIX_ACL
 
-make O=./build -j8
+# 自动处理依赖和新选项,自动使用默认值
+make O=./build olddefconfig
+
+# 编译
+make O=./build -j$(nproc)
+
 cd ${TOP_DIR}
 
 # 更新 ${INSTALL_DIR} 下的文件

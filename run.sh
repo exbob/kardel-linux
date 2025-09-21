@@ -38,11 +38,17 @@ MEM_SIZE="1024" # MB
 # 添加网络支持
 QEMU_NET="-netdev user,id=net0,hostfwd=tcp::2222-:22 -device e1000,netdev=net0"
 
+# 添加9P文件系统共享配置
+HOST_SHARE_PATH=${BUILD_DIR}
+QEMU_9P="-fsdev local,security_model=none,id=fsdev0,path=${HOST_SHARE_PATH} \
+        -device virtio-9p-pci,fsdev=fsdev0,mount_tag=hostshare"
+
 QEMU_HW_CFG="-name ${NAME} \
     -smp ${CPUS} \
     -m ${MEM_SIZE} \
     -nographic \
     ${QEMU_NET} \
+    ${QEMU_9P} \
     -monitor tcp:127.0.0.1:4444,server,nowait "
 
 # 定义 QEMU 的软件参数
