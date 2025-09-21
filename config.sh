@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+set -e
 
 # 获取当前目录
 TOP_DIR=$(pwd)

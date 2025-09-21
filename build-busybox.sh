@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+set -e
+
 . ./config.sh
 
 # 定义 Busybox 版本

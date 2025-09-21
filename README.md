@@ -2,6 +2,10 @@
 
 Kardel Linux 是一个微型 Linux 发行版，命名来自 Dota2 游戏的矮人火枪手：卡德尔·鹰眼（Kardel Sharpeye），目标是构建一个基于 busybox 和 musl 的最简 Linux 发行版，并探索 Linux 系统的基本概念。
 
+目前支持如下内核版本，编译内核时可以选择：
+1. linux-6.6.106
+2. linux-5.15.193
+
 文件说明：
 
 1. config.sh 配置了一些公用的变量，其他脚本会调用它，来确定文件读写的路径。

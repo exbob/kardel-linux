@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+set -e
+
 . ./config.sh
 
 # 检查命令行参数

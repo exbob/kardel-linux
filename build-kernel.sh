@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 . ./config.sh
 
 # 定义多个内核版本选项

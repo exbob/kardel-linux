@@ -1,5 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 # 编译支持 x86_64 架构的 u-boot ，参考：https://source.denx.de/u-boot/u-boot/-/blob/v2022.10/doc/arch/x86.rst?ref_type=tags
+set -e
 
 . ./config.sh
 

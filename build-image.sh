@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+set -e
+
 . ./config.sh
 
 # 检查制作系统镜像所需的文件是否存在
