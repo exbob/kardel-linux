@@ -6,6 +6,8 @@ Kardel Linux 是一个微型 Linux 发行版，命名来自 Dota2 游戏的矮�
 1. linux-6.6.106
 2. linux-5.15.193
 
+在 Ubuntu20.04 和 Ubuntu24.04 系统验证通过。
+
 文件说明：
 
 1. config.sh 配置了一些公用的变量，其他脚本会调用它，来确定文件读写的路径。
