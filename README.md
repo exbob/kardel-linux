@@ -2,9 +2,13 @@
 
 Kardel Linux 是一个微型 Linux 发行版，命名来自 Dota2 游戏的矮人火枪手：卡德尔·鹰眼（Kardel Sharpeye），目标是构建一个基于 busybox 和 musl 的最简 Linux 发行版，并探索 Linux 系统的基本概念。
 
-目前支持如下内核版本，编译内核时可以选择：
-1. linux-6.6.106
-2. linux-5.15.193
+支持如下特性：
+- 支持uboot启动和UEFI启动选择
+- 支持内核版本选择，编译内核时可以选择：
+    1. linux-6.6.106
+    2. linux-5.15.193
+- 支持9P-Virtio，实现主机和虚拟机文件共享
+- 支持GDB远程调试内核
 
 在 Ubuntu20.04 和 Ubuntu24.04 系统验证通过。
 
@@ -165,4 +169,84 @@ PING 223.5.5.5 (223.5.5.5): 56 data bytes
 --- 223.5.5.5 ping statistics ---
 4 packets transmitted, 4 packets received, 0% packet loss
 round-trip min/avg/max = 15.167/17.795/25.036 ms
+```
+
+### 调试内核
+
+支持GDB远程调试内核，默认端口9001，主机要安装 gdb ：
+
+``` bash
+sudo apt-get install gdb
+```
+
+执行`build-kernel.sh`编译内核时，根据提示选择debug模式：
+
+``` bash
+> ./build-kernel.sh 
+Kernel version:
+1. linux-6.6.106
+2. linux-5.15.193
+Please select [1-2]: 
+Invalid selection, use default version: linux-6.6.106
+Already selected: linux-6.6.106
+
+Enable debug mode? (y/N): y
+```
+
+启动虚拟机时，选择`-s -d`选项：
+
+``` bash
+> ./run.sh -s -d
+Starting QEMU in debug mode...
+Connect with GDB using: gdb -ex 'target remote localhost:9001'
+If debugging kernel, use:
+  cd /home/lsc/kardel-linux/build/<KERNEL_SRC_VERSION>/build
+  gdb vmlinux
+  target remote localhost:9001
+  continue
+quick start...
+```
+
+内核启动会暂停，然后再另一个终端依次执行如下命令：
+
+``` bash
+# 进入内核编译目录
+> cd /home/lsc/kardel-linux/build/<KERNEL_SRC_VERSION>/build
+...
+Reading symbols from vmlinux...
+# 启动GDB
+(gdb) target remote localhost:9001
+Remote debugging using localhost:9001
+0x000000000000fff0 in exception_stacks ()
+# 新建断点
+(gdb) break start_kernel
+Breakpoint 1 at 0xffffffff83219950: file ../init/main.c, line 877.
+# 执行
+(gdb) c
+Continuing.
+
+Thread 1 hit Breakpoint 1, start_kernel () at ../init/main.c:877
+877     {
+(gdb)
+```
+
+在虚拟机可以看到内核启动，并在断点处暂停：
+
+```
+No EFI environment detected.
+early console in extract_kernel
+input_data: 0x0000000002d572c4
+input_len: 0x0000000000c4370c
+output: 0x0000000001000000
+output_len: 0x000000000295092c
+kernel_total_size: 0x0000000002630000
+needed_size: 0x0000000002a00000
+trampoline_32bit: 0x0000000000000000
+
+
+KASLR disabled: 'nokaslr' on cmdline.
+
+
+Decompressing Linux... Parsing ELF... No relocation needed... done.
+Booting the kernel (entry_offset: 0x0000000000000000).
 ```

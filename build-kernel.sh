@@ -33,6 +33,18 @@ KERNEL_SRC_URL="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
 echo "Already selected: ${KERNEL_SRC_VERSION}"
 echo ""
 
+# 询问是否开启调试模式
+echo -n "Enable debug mode? (y/N): "
+read debug_choice
+DEBUG_MODE=0
+if [[ "$debug_choice" =~ ^[Yy]$ ]]; then
+    DEBUG_MODE=1
+    echo "Debug mode enabled."
+else
+    echo "Debug mode disabled."
+fi
+echo ""
+
 # 下载内核源码并解压
 if [ -e ${DOWNLOAD_DIR}/${KERNEL_SRC_VERSION}.tar.gz ]; then
     echo "kernel source code has been downloaded."
@@ -71,6 +83,13 @@ make O=./build x86_64_defconfig
 ./scripts/config --file ./build/.config --enable CONFIG_9P_FS
 ./scripts/config --file ./build/.config --enable CONFIG_9P_FS_POSIX_ACL
 
+# 根据用户选择决定是否开启调试信息
+if [ $DEBUG_MODE -eq 1 ]; then
+    echo "Enabling kernel debug information..."
+    # 开启调试信息
+    ./scripts/config --file ./build/.config --enable DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT
+fi
+
 # 自动处理依赖和新选项,自动使用默认值
 make O=./build olddefconfig
 
@@ -84,6 +103,21 @@ if [ -e ${INSTALL_DIR}/${KERNEL_IMG} ]; then
     rm -rf ${INSTALL_DIR}/${KERNEL_IMG}
 fi
 cp ${BUILD_DIR}/${KERNEL_SRC_VERSION}/build/arch/x86/boot/bzImage ${INSTALL_DIR}/${KERNEL_IMG}
+
 echo "------"
 echo "kernel build success."
 echo "kernel image: ${INSTALL_DIR}/${KERNEL_IMG}"
+
+# 如果开启了调试模式，显示调试提示
+if [ $DEBUG_MODE -eq 1 ]; then
+    echo "------"
+    echo "Debug mode is enabled."
+    echo "To debug the kernel, use the following commands:"
+    echo "1. Start QEMU with debug option: ./run.sh -s -d"
+    echo "2. In another terminal, start GDB:"
+    echo "   cd ${BUILD_DIR}/${KERNEL_SRC_VERSION}/build"
+    echo "   gdb vmlinux"
+    echo "3. In GDB console, connect to QEMU:"
+    echo "   target remote localhost:${GDB_PORT}"
+    echo "   continue"
+fi
