@@ -177,7 +177,7 @@ EOF
 - `etc/init.d/rcS`，这是init 进程执行的第一个脚本，`/bin/mount -a`命令的作用是挂载`/etc/fstab`文件中定义的所有文件系统。
 - `etc/fstab`，描述了默认的文件系统挂载配置。
 
-用上面制作的根文件系统生成ext4格式的rootfs镜像：
+用上面制作的根文件系统生成 ext4 格式的[initial RAM disk (initrd)](https://docs.kernel.org/admin-guide/initrd.html) 镜像：
 
 ``` bash
 dd if=/dev/zero of=rootfs.ext4 bs=1M count=32
@@ -207,7 +207,7 @@ qemu-system-x86_64 \
 - `-kernel` 定义了使用的内核文件，这个配置会跳过BIOS/UEFI启动过程，直接启动内核。
 - `-initrd` 指定了初始RAM磁盘文件（init RAM Disk），initrd是在启动阶段被Linux内核调用的临时文件系统，用于根目录被挂载之前的准备工作，我们直接用它来研究Linux比较简单。
 - `-append` 定义了内核启动参数字符串：
-    - `root=/dev/ram`表示挂载`/dev/ram`作为根文件系统
+    - `root=/dev/ram`表示挂载`/dev/ram`作为根文件系统挂载设备，内核将压缩的ext4镜像加载到RAM磁盘设备
     - `console=ttyS0` 定义了控制台输出到串口0（配合-nographic使用）
     - `init=/sbin/init` 定义了init进程。
 
@@ -224,11 +224,6 @@ qemu-system-x86_64 \
 [    3.050250] rcS (78) used greatest stack depth: 14128 bytes left
 
 Please press Enter to activate this console.
-~ # df
-Filesystem           1K-blocks      Used Available Use% Mounted on
-/dev/root                26596      2496     21812  10% /
-devtmpfs                495408         0    495408   0% /dev
-tmpfs                   498472         0    498472   0% /tmp
 
 ~ # poweroff
 The system is going down NOW!
@@ -241,3 +236,36 @@ Requesting system poweroff
 ```
 
 可以执行 `poweroff` 命令关机，如果要直接关闭 Qemu 虚拟机，可以按下组合键`Ctrl+a`，然后按 `x` 键。
+
+启动后，可以查看文件系统挂载情况符合 `/etc/fstab` 的配置：
+
+```
+~ # df -a
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/root                26596      2496     21812  10% /
+devtmpfs                495408         0    495408   0% /dev
+proc                         0         0         0   0% /proc
+tmpfs                   498472         0    498472   0% /tmp
+sysfs                        0         0         0   0% /sys
+```
+
+但是，`/dev` 目录的自动挂载是Linux内核的内置机制，不需要在 `/etc/fstab` 中配置。还会发现，命令行参数配置的是`root=/dev/ram`，但是系统只有`/dev/ram0`设备，没有 `/dev/ram` 也没有 `/dev/root`:
+
+``` bash
+~ # ls -l /dev/ram*
+brw-------    1 0        0           1,   0 Sep 25 01:27 /dev/ram0
+~ # ls /dev/root
+ls: /dev/root: No such file or directory
+```
+
+这是因为内核历史问题和兼容性考虑，启动时，如果命令行参数中指定 `root=/dev/ram` ，内核会自动将其内部转换为 `root=/dev/ram0` ，直接设置 `root=/dev/ram0` 也可以。而显示时，无论实际设备是什么，都会显示`/dev/root`，用于表示"当前的根文件系统设备"。内核解析过程：
+
+```
+用户指定: root=/dev/ram
+    ↓
+内核解析: /dev/ram → /dev/ram0 (主设备号1，次设备号0)
+    ↓
+内核挂载: 实际挂载 /dev/ram0 作为根文件系统
+    ↓
+显示名称: 在用户空间显示为 /dev/root
+```
