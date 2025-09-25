@@ -210,7 +210,7 @@ qemu-system-x86_64 \
 - `-append` 定义了内核启动参数字符串：
     - `root=/dev/ram`表示用`/dev/ram`作为挂载根文件系统的设备，内核将压缩的ext4镜像解压到RAM Disk设备
     - `console=ttyS0` 定义了控制台输出到串口0（配合-nographic使用）
-    - `init=/sbin/init` 定义了init进程。
+    - `init=/sbin/init` 定义了init进程。传统的 initrd (Initial RAM Disk) 系统会默认执行 `/linuxrc` 作为临时初始化脚本进行过渡，执行完毕后，内核会尝试加载真正的rootfs并执行init进程，现在已经基本废弃这种方式。我们直接定义 `/sbin/init` 为系统启动后的第一个进程，内核会将 `/sbin/init` 启动为 PID 1，会一直运行，不会再进行根文件系统切换的特殊处理。
 
 启动后的Qemu虚拟机：
 
