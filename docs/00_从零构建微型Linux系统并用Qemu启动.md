@@ -390,3 +390,5 @@ tmpfs                   498472         0    498472   0% /tmp
 sysfs                        0         0         0   0% /sys
 devtmpfs                495428         0    495428   0% /dev
 ```
+
+更多关于Linux启动方式的早期历史，可以参考initrd和LILO作者的文章：<https://www.almesberger.net/cv/papers/ols2k-9.pdf>
