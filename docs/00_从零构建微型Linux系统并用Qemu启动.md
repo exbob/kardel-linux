@@ -89,6 +89,7 @@ make O=./build -j$(nproc)
 > file build/arch/x86/boot/bzImage
 build/arch/x86/boot/bzImage: Linux kernel x86 boot executable bzImage, version 5.15.193 (lsc@Bob) #1 SMP Wed Sep 24A
 ```
+
 bzImage 是一个经过gzip压缩的内核镜像文件。
 
 ## 3. 编译BusyBox并生成根文件系统
@@ -207,7 +208,7 @@ qemu-system-x86_64 \
 - `-kernel` 定义了使用的内核文件，这个配置会跳过BIOS/UEFI启动过程，直接启动内核。
 - `-initrd` 指定了初始RAM磁盘文件（init RAM Disk），initrd是在启动阶段被Linux内核调用的临时文件系统，用于根目录被挂载之前的准备工作，我们直接用它来研究Linux比较简单。
 - `-append` 定义了内核启动参数字符串：
-    - `root=/dev/ram`表示挂载`/dev/ram`作为根文件系统挂载设备，内核将压缩的ext4镜像加载到RAM磁盘设备
+    - `root=/dev/ram`表示用`/dev/ram`作为挂载根文件系统的设备，内核将压缩的ext4镜像解压到RAM Disk设备
     - `console=ttyS0` 定义了控制台输出到串口0（配合-nographic使用）
     - `init=/sbin/init` 定义了init进程。
 
@@ -268,4 +269,124 @@ ls: /dev/root: No such file or directory
 内核挂载: 实际挂载 /dev/ram0 作为根文件系统
     ↓
 显示名称: 在用户空间显示为 /dev/root
+```
+
+## 5. 改用initramfs
+
+Linux内核支持的rootfs启动介质类似非常多，常用的包括：
+1. 传统块设备，例如硬盘`root=/dev/sda1`,eMMC/SD卡`root=/dev/mmcblk0p1`。
+2. 网络文件系统，`root=/dev/nfs`
+3. RamDisk设备，`root=/dev/ram`
+
+我们用的RamDisk设备，属于传统的 initrd 镜像，需要块设备和文件系统（ext4）支持，制作方式比较复杂，且大小固定，需要分配固定大小的内存，使用时内核需要挂载整个块设备，启动流程也比较复杂：
+
+```
+内核启动 → 加载initrd到/dev/ram → 挂载/dev/ram → 执行/sbin/init → 读取/etc/inittab
+```
+
+从 Linux 2.6.13 开始，内核支持 [initramfs](https://docs.kernel.org/filesystems/ramfs-rootfs-initramfs.html) 启动，它以ramfs技术为基础，rootfs存储在cpio格式的压缩包里，启动时直接解压到内存，没有文件系统开销，作为临时过渡的rootfs，启动过程简单直接，速度更快：
+
+```
+内核启动 → 解压initramfs到内存 → 直接执行/init
+```
+
+要使用initramfs，需要使能内核支持：
+
+``` bash
+./scripts/config --file ./build/.config --enable CONFIG_INITRAMFS_SOURCE
+./scripts/config --file ./build/.config --enable CONFIG_INITRAMFS_COMPRESSION_GZIP
+# 可以关闭 RAMDisk 支持，不需要。
+# ./scripts/config --file ./build/.config --disable CONFIG_BLK_DEV_RAM
+make O=./build olddefconfig
+```
+
+然后做一个最简单的initramfs镜像：
+
+``` bash
+# 新建一个HelloWord程序，编译为 init 可执行文件，因为内核对于initramfs会默认从/init启动
+cat > hello.c << EOF
+#include <stdio.h>
+#include <unistd.h>
+
+int main(int argc, char *argv[])
+{
+  printf("Hello world!\n");
+  sleep(999999999);
+}
+EOF
+gcc -static hello.c -o init
+
+# 生成 cpio 格式的压缩包
+echo init | cpio -o -H newc | gzip > test.cpio.gz
+```
+
+启动虚拟机：
+
+``` bash
+qemu-system-x86_64 \
+-name kardel \
+-smp 2 -m 1024 -nographic \
+-kernel ./bzImage \
+-initrd ./test.cpio.gz \
+-append "rw rootfstype=ramfs console=ttyS0"
+```
+
+因为内核默认使能了`CONFIG_TMPFS`，所以必须在命令行参数中定义rootfs的类型`rootfstype=ramfs`，否则会默认为tmpfs，导致无法启动。命令行参数没有设置 init，内核就会默认启动 `/init` 程序：
+
+```
+[    2.375607] Freeing unused kernel image (initmem) memory: 1488K
+[    2.376463] Write protecting the kernel read-only data: 24576k
+[    2.380567] Freeing unused kernel image (text/rodata gap) memory: 2032K
+[    2.382223] Freeing unused kernel image (rodata/data gap) memory: 1292K
+[    2.382931] Run /init as init process
+Hello world!
+```
+
+因为没有启动Shell，无法进行任何操作。下面用busybox制作一个initramfs镜像。
+
+编译busybox的方式不变，还是在 `_install/` 下制作基本的根文件系统，需要修改 `etc/fstab` 文件，加入devtmpfs挂载配置。这是因为initrd (Initial RAM Disk)是一个真正的文件系统镜像（通常是ext2/ext4/cramfs），内核会将其挂载为块设备，系统启动时，内核会自动创建基本的设备节点。而initramfs(Initial RAM File System)只是一个cpio 归档，直接解压到内存中运行，没有块设备概念，是纯内存文件系统，内核不会自动创建设备节点。
+
+``` bash
+# 创建fstab文件
+cat > etc/fstab << EOF
+proc    /proc    proc    defaults    0    0
+tmpfs   /tmp     tmpfs   defaults    0    0
+sysfs   /sys     sysfs   defaults    0    0
+EOF
+```
+
+然后改变最后的打包方式：
+
+``` bash
+cd _install/
+find . | cpio -o -H newc | gzip > ../../rootfs.cpio.gz
+```
+
+启动虚拟机时，需要修改命令行参数。改用`rdinit=`指定 init 程序，这个选项专用指定initramfs/initrd中的 init 程序，而`init=`参数用于指定根文件系统挂载后的init程序，initramfs没有挂载的过程，会找不到程序：
+
+``` bash
+qemu-system-x86_64 \
+-name kardel \
+-smp 2 -m 1024 -nographic \
+-kernel ./bzImage \
+-initrd ./rootfs.cpio.gz \
+-append "rw rootfstype=ramfs console=ttyS0 rdinit=/sbin/init"
+```
+
+启动正常：
+
+```
+[    2.539957] Run /sbin/init as init process
+[    2.608081] mount (76) used greatest stack depth: 14696 bytes left
+[    2.617947] rcS (75) used greatest stack depth: 14640 bytes left
+
+Please press Enter to activate this console. 
+
+~ # df -a
+Filesystem           1K-blocks      Used Available Use% Mounted on
+none                         0         0         0   0% /
+proc                         0         0         0   0% /proc
+tmpfs                   498472         0    498472   0% /tmp
+sysfs                        0         0         0   0% /sys
+devtmpfs                495428         0    495428   0% /dev
 ```
