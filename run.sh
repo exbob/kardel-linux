@@ -83,6 +83,8 @@ QEMU_9P="-fsdev local,security_model=none,id=fsdev0,path=${HOST_SHARE_PATH} \
         -device virtio-9p-pci,fsdev=fsdev0,mount_tag=hostshare"
 
 # 添加GDB调试支持
+# 定义 GDB 的选项参数
+GDB_PORT=9001
 if [ $DEBUG_MODE -eq 1 ]; then
     QEMU_DEBUG="-S \
                 -gdb tcp::${GDB_PORT}"
@@ -104,7 +106,7 @@ QEMU_HW_CFG="-name ${NAME} \
     ${QEMU_NET} \
     ${QEMU_9P} \
     ${QEMU_DEBUG} \
-    -monitor tcp:127.0.0.1:4444,server,nowait "
+    -serial mon:stdio"
 
 if [ $DEBUG_MODE -eq 1 ]; then
     QEMU_APPEND="root=/dev/ram rw rootfstype=ext4 console=ttyS0 init=/sbin/init ip=dhcp earlyprintk=serial,ttyS0 nokaslr"

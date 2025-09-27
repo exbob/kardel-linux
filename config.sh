@@ -26,6 +26,3 @@ KERNEL_IMG=vmlinuz
 ROOTFS=rootfs
 ROOTFS_IMG=rootfs.img.gz
 ROOTFS_IMG_SIZE=32 # MB
-
-# 定义 GDB 的选项参数
-GDB_PORT=9001

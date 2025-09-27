@@ -86,12 +86,6 @@ Starting kernel ...
 
 可以执行 `poweroff` 命令关机，如果要直接关闭 Qemu 虚拟机，可以按下组合键`Ctrl+a`，然后按 `x` 键。
 
-该虚拟机添加了 `-monitor tcp:127.0.0.1:4444` 选项，可以用 `telnet 127.0.0.1 4444` 连接虚拟机的监视器，查看虚拟机的配置和状态，例如：
-
-![qemu monitor](./_pics/qemu-monitor_20241231200440.png)
-
-注意，按下 `Ctrl+]` 组合键可以只退出监视器而不关闭虚拟机，如果执行 q 命令，会关闭虚拟机。
-
 > 更多内容参考 `docs/` 下的文档。
 
 ## 使用方法
@@ -170,6 +164,27 @@ PING 223.5.5.5 (223.5.5.5): 56 data bytes
 4 packets transmitted, 4 packets received, 0% packet loss
 round-trip min/avg/max = 15.167/17.795/25.036 ms
 ```
+
+### 虚拟机监视器
+
+该虚拟机添加了串口监视器 `-serial mon:stdio` ，可以用 `Ctrl+A, C` 组合键在监控模式和串口模式之间切换，进入监控模式后，可以查看虚拟机的硬件信息等：
+
+``` bash
+~ # (qemu) info version
+8.2.2Debian 1:8.2.2+ds-0ubuntu1.10
+(qemu) info cpus
+* CPU #0: thread_id=85480
+  CPU #1: thread_id=85481
+(qemu) info network
+e1000.0: index=0,type=nic,model=e1000,macaddr=52:54:00:12:34:56
+ \ net0: index=0,type=user,net=10.0.2.0,restrict=off
+(qemu)
+(qemu)
+
+~ #
+```
+
+注意，如果执行 q 命令，会直接关闭虚拟机。
 
 ### 调试内核
 
