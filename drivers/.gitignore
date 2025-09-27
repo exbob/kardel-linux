@@ -1,0 +1,81 @@
+# 编译生成的内核模块文件
+*.ko
+*.ko.cmd
+
+# 目标文件
+*.o
+*.o.cmd
+
+# 模块相关文件
+*.mod
+*.mod.c
+*.mod.o
+
+# 内核构建系统生成的文件
+.*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+
+# 编译过程中的临时文件
+*.tmp
+*.bak
+*~
+
+# 调试信息文件
+*.dwo
+
+# 签名文件
+*.sig
+
+# 压缩文件
+*.gz
+*.xz
+
+# 编辑器临时文件
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志文件
+*.log
+
+# 备份文件
+*.orig
+*.rej
+
+# 补丁文件
+*.patch
+*.diff
+
+# 构建目录（如果有的话）
+build/
+out/
+
+# 测试相关文件
+test_*.ko
+*_test.ko
+
+# 文档生成文件
+*.pdf
+*.html
+*.xml
