@@ -375,7 +375,7 @@ qemu-system-x86_64 \
 
 启动正常：
 
-```
+``` bash
 [    2.539957] Run /sbin/init as init process
 [    2.608081] mount (76) used greatest stack depth: 14696 bytes left
 [    2.617947] rcS (75) used greatest stack depth: 14640 bytes left
