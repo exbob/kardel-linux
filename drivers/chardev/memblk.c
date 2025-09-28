@@ -267,5 +267,5 @@ module_exit(dev_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("LiShaocheng <gexbob@gmail.com>");
-MODULE_DESCRIPTION("A simple char device driver module - single open only");
+MODULE_DESCRIPTION("A simple char device driver module");
 MODULE_VERSION("1.0");
